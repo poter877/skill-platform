@@ -1,16 +1,16 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
-import type { LanguageModelV1 } from 'ai'
+import type { LanguageModel } from 'ai'
 
-export type ModelId = 'claude-sonnet-4-5' | 'gpt-4o' | 'gemini-2.0-flash'
+export type ModelId = 'gpt-5' | 'claude-sonnet-4-5' | 'gemini-2.0-flash'
 
-export function getModel(modelId: ModelId): LanguageModelV1 {
+export function getModel(modelId: ModelId): LanguageModel {
   switch (modelId) {
+    case 'gpt-5':
+      return openai('gpt-5')
     case 'claude-sonnet-4-5':
-      return anthropic('claude-sonnet-4-5-20251001')
-    case 'gpt-4o':
-      return openai('gpt-4o')
+      return anthropic('claude-sonnet-4-5')
     case 'gemini-2.0-flash':
       return google('gemini-2.0-flash')
   }

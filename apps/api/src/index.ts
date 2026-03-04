@@ -23,6 +23,7 @@ app.route('/jobs', jobsRouter)
 export default {
   port: env.PORT,
   fetch: app.fetch,
+  idleTimeout: 120,
 }
 
 process.on('unhandledRejection', (reason) => {

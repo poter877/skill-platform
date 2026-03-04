@@ -3,7 +3,7 @@ import { FormFieldSchema } from './skill'
 
 export const GenerateSkillSchema = z.object({
   description: z.string().min(10),
-  model: z.enum(['claude-sonnet-4-5', 'gpt-4o', 'gemini-2.0-flash']).default('claude-sonnet-4-5'),
+  model: z.enum(['gpt-5', 'claude-sonnet-4-5', 'gemini-2.0-flash']).default('gpt-5'),
 })
 
 export const ImportGithubSkillSchema = z.object({

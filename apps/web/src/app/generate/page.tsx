@@ -32,7 +32,7 @@ export default function GeneratePage() {
 
   const form = useForm({
     resolver: zodResolver(GenerateSkillSchema),
-    defaultValues: { description: '', model: 'claude-sonnet-4-5' as const },
+    defaultValues: { description: '', model: 'gpt-5' as const },
   })
 
   async function handleGenerate(values: { description: string; model: string }) {
@@ -58,26 +58,14 @@ export default function GeneratePage() {
         throw new Error((errBody as { error?: string }).error ?? `API error: ${res.status}`)
       }
 
-      // Fix 1: Persistent line buffer to handle SSE chunk fragmentation
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      let buffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''  // keep incomplete last line
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            setGeneratedContent(prev => prev + line.slice(6))
-          }
-        }
-      }
-      // Flush any remaining buffer content
-      if (buffer.startsWith('data: ')) {
-        setGeneratedContent(prev => prev + buffer.slice(6))
+        const text = decoder.decode(value, { stream: true })
+        setGeneratedContent(prev => prev + text)
       }
     } catch (err) {
       // Fix 2: Ignore AbortError (user-initiated cancellation)
@@ -139,8 +127,8 @@ export default function GeneratePage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="gpt-5">GPT-5</SelectItem>
                         <SelectItem value="claude-sonnet-4-5">Claude Sonnet</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                         <SelectItem value="gemini-2.0-flash">Gemini Flash</SelectItem>
                       </SelectContent>
                     </Select>

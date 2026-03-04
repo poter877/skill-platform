@@ -11,6 +11,13 @@ const EnvSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET: z.string().optional(),
   PORT: z.coerce.number().default(3001),
+  CORS_ORIGIN: z.string().default('http://localhost:3000'),
 })
 
-export const env = EnvSchema.parse(process.env)
+const result = EnvSchema.safeParse(process.env)
+if (!result.success) {
+  console.error('❌ Invalid environment variables:')
+  console.error(result.error.flatten().fieldErrors)
+  process.exit(1)
+}
+export const env = result.data

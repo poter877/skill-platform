@@ -6,7 +6,7 @@ import { env } from './lib/env'
 const app = new Hono()
 
 app.use('*', logger())
-app.use('*', cors({ origin: 'http://localhost:3000' }))
+app.use('*', cors({ origin: env.CORS_ORIGIN }))
 
 app.get('/health', (c) => c.json({ ok: true }))
 
@@ -14,3 +14,8 @@ export default {
   port: env.PORT,
   fetch: app.fetch,
 }
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason)
+  process.exit(1)
+})

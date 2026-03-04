@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
 import {
-  Form, FormControl, FormField, FormItem, FormLabel
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { apiPost, API_BASE_URL } from '@/lib/api'
@@ -23,12 +23,24 @@ export default function GeneratePage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  // Fix 2: AbortController ref for cancellation
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
+
   const form = useForm({
     resolver: zodResolver(GenerateSkillSchema),
     defaultValues: { description: '', model: 'claude-sonnet-4-5' as const },
   })
 
   async function handleGenerate(values: { description: string; model: string }) {
+    // Fix 2: Abort any in-flight request and create a new controller
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setIsGenerating(true)
     setGeneratedContent('')
     setError(null)
@@ -38,6 +50,7 @@ export default function GeneratePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
+        signal: controller.signal,  // Fix 2: pass signal
       })
 
       if (!res.ok || !res.body) {
@@ -45,21 +58,30 @@ export default function GeneratePage() {
         throw new Error((errBody as { error?: string }).error ?? `API error: ${res.status}`)
       }
 
+      // Fix 1: Persistent line buffer to handle SSE chunk fragmentation
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const text = decoder.decode(value)
-        const lines = text.split('\n')
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''  // keep incomplete last line
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             setGeneratedContent(prev => prev + line.slice(6))
           }
         }
       }
+      // Flush any remaining buffer content
+      if (buffer.startsWith('data: ')) {
+        setGeneratedContent(prev => prev + buffer.slice(6))
+      }
     } catch (err) {
+      // Fix 2: Ignore AbortError (user-initiated cancellation)
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Generation failed')
     } finally {
       setIsGenerating(false)
@@ -100,6 +122,8 @@ export default function GeneratePage() {
                         {...field}
                       />
                     </FormControl>
+                    {/* Fix 3: Show validation messages for description field */}
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -120,11 +144,14 @@ export default function GeneratePage() {
                         <SelectItem value="gemini-2.0-flash">Gemini Flash</SelectItem>
                       </SelectContent>
                     </Select>
+                    {/* Fix 3: Show validation messages for model field */}
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" disabled={isGenerating}>
+              {/* Fix 4: Disable Generate button while saving */}
+              <Button type="submit" disabled={isGenerating || isSaving}>
                 {isGenerating ? 'Generating...' : '✨ Generate'}
               </Button>
             </form>

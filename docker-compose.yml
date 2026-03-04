@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: skillplant
+      POSTGRES_USER: skillplant
+      POSTGRES_PASSWORD: skillplant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgres://skillplant:skillplant@postgres:5432/skillplant
+      REDIS_URL: redis://redis:6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - uploads_data:/tmp/skill-plant-uploads
+      - jobs_data:/tmp/skill-plant-jobs
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
+  uploads_data:
+  jobs_data:

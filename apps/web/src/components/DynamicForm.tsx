@@ -12,6 +12,7 @@ import {
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage
 } from '@/components/ui/form'
+import { API_BASE_URL } from '@/lib/api'
 import type { FormField as SkillFormField } from '@skill-plant/shared'
 
 interface DynamicFormProps {
@@ -20,45 +21,65 @@ interface DynamicFormProps {
   isSubmitting?: boolean
 }
 
-// Build a Zod schema dynamically from field definitions
-function buildZodSchema(fields: SkillFormField[]) {
+function buildSchema(fields: SkillFormField[]) {
   const shape: Record<string, z.ZodTypeAny> = {}
+  const defaults: Record<string, unknown> = {}
+
   for (const field of fields) {
-    let validator: z.ZodTypeAny = z.string()
-    if (field.required) {
-      validator = z.string().min(1, `${field.label} is required`)
+    defaults[field.name] = field.default ?? ''
+
+    if (field.type === 'number') {
+      shape[field.name] = field.required
+        ? z.coerce.number({ invalid_type_error: `${field.label} must be a number` })
+        : z.coerce.number().optional()
+    } else if (field.type === 'url') {
+      shape[field.name] = field.required
+        ? z.string().url(`${field.label} must be a valid URL`).min(1, `${field.label} is required`)
+        : z.string().url(`${field.label} must be a valid URL`).optional().or(z.literal(''))
+    } else if (field.type === 'file') {
+      shape[field.name] = z.string().optional()
     } else {
-      validator = z.string().optional()
+      shape[field.name] = field.required
+        ? z.string().min(1, `${field.label} is required`)
+        : z.string().optional()
     }
-    shape[field.name] = validator
   }
-  return z.object(shape)
+
+  return { schema: z.object(shape), defaults }
 }
 
 export function DynamicForm({ fields, onSubmit, isSubmitting }: DynamicFormProps) {
-  const schema = useMemo(() => buildZodSchema(fields), [fields])
-  const form = useForm({ resolver: zodResolver(schema) })
+  const { schema, defaults } = useMemo(() => buildSchema(fields), [fields])
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: defaults })
   const fileRefs = useRef<Record<string, File>>({})
 
   async function handleSubmit(values: Record<string, unknown>) {
-    // For file fields, upload first then replace value with returned path
-    const resolved: Record<string, string> = {}
-    for (const [key, value] of Object.entries(values)) {
-      const field = fields.find(f => f.name === key)
-      if (field?.type === 'file' && fileRefs.current[key]) {
-        const formData = new FormData()
-        formData.append('file', fileRefs.current[key])
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/uploads`, {
-          method: 'POST',
-          body: formData,
-        })
-        const { path } = await res.json()
-        resolved[key] = path
-      } else {
-        resolved[key] = value as string
+    try {
+      const resolved: Record<string, string> = {}
+
+      for (const [key, value] of Object.entries(values)) {
+        const field = fields.find(f => f.name === key)
+        if (field?.type === 'file' && fileRefs.current[key]) {
+          const formData = new FormData()
+          formData.append('file', fileRefs.current[key])
+          const res = await fetch(`${API_BASE_URL}/uploads`, {
+            method: 'POST',
+            body: formData,
+          })
+          if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+          const { path } = await res.json()
+          resolved[key] = path
+        } else {
+          resolved[key] = String(value ?? '')
+        }
       }
+
+      onSubmit(resolved)
+    } catch (err) {
+      form.setError('root', {
+        message: err instanceof Error ? err.message : 'Submit failed',
+      })
     }
-    onSubmit(resolved)
   }
 
   return (
@@ -88,7 +109,7 @@ export function DynamicForm({ fields, onSubmit, isSubmitting }: DynamicFormProps
                   ) : field.type === 'textarea' ? (
                     <Textarea placeholder={field.placeholder} {...rhfField} />
                   ) : field.type === 'select' ? (
-                    <Select onValueChange={rhfField.onChange} defaultValue={field.default}>
+                    <Select onValueChange={rhfField.onChange} value={rhfField.value as string}>
                       <SelectTrigger><SelectValue placeholder={field.placeholder} /></SelectTrigger>
                       <SelectContent>
                         {field.options?.map(opt => (
@@ -96,6 +117,26 @@ export function DynamicForm({ fields, onSubmit, isSubmitting }: DynamicFormProps
                         ))}
                       </SelectContent>
                     </Select>
+                  ) : field.type === 'multiselect' ? (
+                    <div className="space-y-2">
+                      {field.options?.map(opt => (
+                        <label key={opt} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            value={opt}
+                            checked={(rhfField.value as string ?? '').split(',').filter(Boolean).includes(opt)}
+                            onChange={e => {
+                              const current = (rhfField.value as string ?? '').split(',').filter(Boolean)
+                              const next = e.target.checked
+                                ? [...current, opt]
+                                : current.filter(v => v !== opt)
+                              rhfField.onChange(next.join(','))
+                            }}
+                          />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
                   ) : (
                     <Input
                       type={field.type === 'number' ? 'number' : field.type === 'url' ? 'url' : 'text'}
@@ -109,6 +150,10 @@ export function DynamicForm({ fields, onSubmit, isSubmitting }: DynamicFormProps
             )}
           />
         ))}
+
+        {form.formState.errors.root && (
+          <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+        )}
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Running...' : '▶ Run Skill'}

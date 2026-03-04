@@ -1,13 +1,22 @@
-# Skill Plant
+# Skill Platform
 
-AI Skill Marketplace — 用 AI 生成、管理和运行 Claude Code Skills 的 Web 平台。
+让每个人都能使用 AI Skill 的开放平台。
 
-用户可以通过自然语言描述生成 SKILL.md 文件，发布到 Marketplace，然后通过动态表单提交参数，在隔离的 Docker 容器中运行 Claude Code CLI 执行任务。
+## 背景
+
+目前市面上的 AI Skill（如 Claude Code Skills）大多面向程序员设计——需要编写 SKILL.md、理解 frontmatter 格式、通过 CLI 调用。这意味着大量非技术用户被拒之门外，无法享受 AI Skill 带来的效率提升。
+
+**Skill Platform** 解决了这个问题：
+
+- **非程序员也能用** — 通过可视化表单直接填写参数、一键执行，无需接触代码或命令行
+- **AI 生成 Skill** — 用自然语言描述需求，AI 自动生成 SKILL.md，降低 Skill 创建门槛
+- **开放共享** — 用户可以上传自己的 Skill 到 Marketplace，供其他人搜索和使用
+- **安全隔离** — 所有 Skill 在独立的 Docker 容器中执行，互不干扰
 
 ## 架构
 
 ```
-skill-plant/
+skill-platform/
 ├── apps/
 │   ├── web/          # Next.js 16 前端 (React 19 + shadcn/ui)
 │   └── api/          # Hono + Bun 后端 API
@@ -79,11 +88,11 @@ skill-plant/
 
 ```bash
 # 1. 克隆项目
-git clone <repo-url> && cd skill-plant
+git clone <repo-url> && cd skill-platform
 
 # 2. 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入 ANTHROPIC_API_KEY 等
+# 编辑 .env，填入 ANTHROPIC_AUTH_TOKEN 和 ANTHROPIC_BASE_URL
 
 # 3. 启动服务
 docker compose up -d
@@ -109,16 +118,17 @@ pnpm dev
 
 ## 环境变量
 
-| 变量                         | 必填 | 说明                       |
-| ---------------------------- | ---- | -------------------------- |
-| `ANTHROPIC_API_KEY`          | 是   | Anthropic API Key          |
-| `ANTHROPIC_BASE_URL`         | 否   | 自定义 API 代理地址        |
-| `OPENAI_API_KEY`             | 否   | OpenAI API Key             |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | 否 | Google AI API Key          |
-| `DATABASE_URL`               | 是   | PostgreSQL 连接字符串      |
-| `REDIS_URL`                  | 否   | Redis 连接地址（默认 localhost:6379） |
-| `CORS_ORIGIN`                | 否   | 前端地址（默认 http://localhost:3000）|
-| `PORT`                       | 否   | API 端口（默认 3001）      |
+| 变量                           | 必填 | 说明                                  |
+| ------------------------------ | ---- | ------------------------------------- |
+| `ANTHROPIC_AUTH_TOKEN`         | 是   | Anthropic Auth Token                  |
+| `ANTHROPIC_BASE_URL`           | 是   | API 地址                              |
+| `ANTHROPIC_API_KEY`            | 否   | Anthropic API Key（直连官方 API 时）  |
+| `OPENAI_API_KEY`               | 否   | OpenAI API Key                        |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | 否   | Google AI API Key                     |
+| `DATABASE_URL`                 | 是   | PostgreSQL 连接字符串                 |
+| `REDIS_URL`                    | 否   | Redis 连接地址（默认 localhost:6379） |
+| `CORS_ORIGIN`                  | 否   | 前端地址（默认 http://localhost:3000）|
+| `PORT`                         | 否   | API 端口（默认 3001）                 |
 
 ## 项目脚本
 

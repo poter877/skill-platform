@@ -44,6 +44,18 @@ services:
       redis:
         condition: service_started
 
+  claude-code:
+    build:
+      context: .
+      dockerfile: docker/claude-code/Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
+    volumes:
+      - jobs_data:/workspace
+    profiles:
+      - claude
+
 volumes:
   postgres_data:
   uploads_data:

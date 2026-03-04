@@ -5,7 +5,7 @@ import { jobs, skills } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import { env } from './env'
 
-const JOBS_DIR = process.env.JOBS_DIR ?? '/tmp/skill-plant-jobs'
+const JOBS_DIR = process.env.JOBS_DIR ?? join(process.env.HOME ?? '/tmp', '.skill-plant', 'jobs')
 
 export async function runJob(jobId: string): Promise<string> {
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId))
@@ -15,17 +15,18 @@ export async function runJob(jobId: string): Promise<string> {
   if (!skill) throw new Error(`Skill ${job.skillId} not found`)
 
   const jobDir = join(JOBS_DIR, jobId)
-  const skillsDir = join(jobDir, 'skills', skill.name)
+  const skillsDir = join(jobDir, 'skills')
+  const skillDir = join(skillsDir, skill.name)
   const workspaceDir = join(jobDir, 'workspace')
 
-  await mkdir(skillsDir, { recursive: true })
+  await mkdir(skillDir, { recursive: true })
   await mkdir(workspaceDir, { recursive: true })
-  await writeFile(join(skillsDir, 'SKILL.md'), skill.content)
+  await writeFile(join(skillDir, 'SKILL.md'), skill.content)
 
   const inputs = job.inputs as Record<string, string>
   const prompt = buildPrompt(skill.name, inputs)
 
-  return runDocker({ skillsDir, workspaceDir, prompt, apiKey: env.ANTHROPIC_API_KEY })
+  return runDocker({ skillsDir, workspaceDir, prompt, authToken: env.ANTHROPIC_AUTH_TOKEN, baseUrl: env.ANTHROPIC_BASE_URL })
 }
 
 export function buildPrompt(skillName: string, inputs: Record<string, string>): string {
@@ -41,13 +42,18 @@ async function runDocker(opts: {
   skillsDir: string
   workspaceDir: string
   prompt: string
-  apiKey: string
+  authToken?: string
+  baseUrl?: string
 }): Promise<string> {
+  const envArgs: string[] = []
+  if (opts.authToken) envArgs.push('-e', `ANTHROPIC_AUTH_TOKEN=${opts.authToken}`)
+  if (opts.baseUrl) envArgs.push('-e', `ANTHROPIC_BASE_URL=${opts.baseUrl}`)
+
   const proc = Bun.spawn([
     'docker', 'run', '--rm',
     '-v', `${opts.skillsDir}:/root/.claude/skills`,
     '-v', `${opts.workspaceDir}:/workspace`,
-    '-e', `ANTHROPIC_API_KEY=${opts.apiKey}`,
+    ...envArgs,
     'skill-plant-claude-code',
     opts.prompt,
   ], {

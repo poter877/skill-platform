@@ -16,13 +16,17 @@ export default function RunSkillPage() {
   const { data: schema, isLoading: schemaLoading } = useSkillInputSchema(id)
   const [jobId, setJobId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const { events, done } = useJobStream(jobId)
 
   async function handleSubmit(inputs: Record<string, string>) {
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       const job = await apiPost<Job>('/jobs', { skillId: id, inputs })
       setJobId(job.id)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to start job')
     } finally {
       setIsSubmitting(false)
     }
@@ -49,6 +53,9 @@ export default function RunSkillPage() {
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
             />
+            {submitError && (
+              <p className="mt-2 text-sm text-destructive">{submitError}</p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -59,7 +66,9 @@ export default function RunSkillPage() {
             <CardTitle className="flex items-center gap-2">
               Output
               {!done && <Badge variant="secondary">Running...</Badge>}
-              {done && <Badge variant="default">Done</Badge>}
+              {done && events.some(e => e.type === 'error')
+                ? <Badge variant="destructive">Failed</Badge>
+                : done && <Badge variant="default">Done</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>

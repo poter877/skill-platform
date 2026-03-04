@@ -28,7 +28,7 @@ export async function runJob(jobId: string): Promise<string> {
   return runDocker({ skillsDir, workspaceDir, prompt, apiKey: env.ANTHROPIC_API_KEY })
 }
 
-function buildPrompt(skillName: string, inputs: Record<string, string>): string {
+export function buildPrompt(skillName: string, inputs: Record<string, string>): string {
   const parts = [`Use the ${skillName} skill.`]
   for (const [key, value] of Object.entries(inputs)) {
     if (key !== 'instruction') parts.push(`${key}: ${value}`)

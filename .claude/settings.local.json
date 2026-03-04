@@ -1,7 +1,41 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx skills:*)"
+      "Bash(npx skills:*)",
+      "Bash(pnpm install:*)",
+      "Bash(/Users/ll/skill-plant/node_modules/.bin/turbo:*)",
+      "Bash(git:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx tsc:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(docker ps:*)",
+      "Bash(/opt/homebrew/bin/docker ps:*)",
+      "Bash(brew services:*)",
+      "Bash(brew:*)",
+      "Bash(minikube status:*)",
+      "Bash(colima start:*)",
+      "Bash(docker run:*)",
+      "Bash(~/.docker/config.json:*)",
+      "Bash(DATABASE_URL=postgres://skillplant:skillplant@localhost:5432/skillplant bunx drizzle-kit:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(kill %1:*)",
+      "Bash(docker build:*)",
+      "Bash(lsof:*)",
+      "Bash(pkill:*)",
+      "Bash(pnpx shadcn@latest:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(ANTHROPIC_API_KEY=test docker compose:*)",
+      "Bash(docker compose:*)",
+      "Bash(export:*)",
+      "Bash(bun test:*)",
+      "Bash(npx vitest:*)",
+      "Bash(timeout 10 curl:*)",
+      "Bash(bun:*)",
+      "Skill(vercel-ai-sdk)"
     ]
   }
 }

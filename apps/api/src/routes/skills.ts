@@ -9,15 +9,25 @@ export const skillsRouter = new Hono()
 
 // List all skills
 skillsRouter.get('/', async (c) => {
-  const rows = await db.select().from(skills)
-  return c.json(rows)
+  try {
+    const rows = await db.select().from(skills)
+    return c.json(rows)
+  } catch (err) {
+    console.error('Failed to list skills:', err)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
 })
 
 // Get single skill
 skillsRouter.get('/:id', async (c) => {
-  const [skill] = await db.select().from(skills).where(eq(skills.id, c.req.param('id')))
-  if (!skill) return c.json({ error: 'Not found' }, 404)
-  return c.json(skill)
+  try {
+    const [skill] = await db.select().from(skills).where(eq(skills.id, c.req.param('id')))
+    if (!skill) return c.json({ error: 'Not found' }, 404)
+    return c.json(skill)
+  } catch (err) {
+    console.error('Failed to get skill:', err)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
 })
 
 // Import from GitHub
@@ -27,37 +37,53 @@ skillsRouter.post(
   async (c) => {
     const { url } = c.req.valid('json')
 
-    // Convert GitHub tree URL to raw content URL
+    // Convert GitHub tree/blob URL to raw content URL
     // e.g. https://github.com/anthropics/skills/tree/main/skills/pdf
     //   -> https://raw.githubusercontent.com/anthropics/skills/main/skills/pdf/SKILL.md
     const rawUrl = url
       .replace('github.com', 'raw.githubusercontent.com')
       .replace('/tree/', '/')
+      .replace('/blob/', '/')
+      .replace(/\/SKILL\.md$/, '')  // avoid double SKILL.md if user pasted file link
       + '/SKILL.md'
 
-    const res = await fetch(rawUrl)
-    if (!res.ok) return c.json({ error: 'Failed to fetch SKILL.md from GitHub' }, 400)
+    try {
+      const res = await fetch(rawUrl)
+      if (!res.ok) return c.json({ error: 'Failed to fetch SKILL.md from GitHub' }, 400)
 
-    const content = await res.text()
+      const content = await res.text()
 
-    // Parse frontmatter
-    const nameMatch = content.match(/^name:\s*(.+)$/m)
-    const descMatch = content.match(/^description:\s*(.+)$/m)
+      // Parse frontmatter
+      // Extract frontmatter block between first --- delimiters
+      const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/m)
+      const frontmatter = frontmatterMatch?.[1] ?? content
 
-    const [skill] = await db.insert(skills).values({
-      name: nameMatch?.[1]?.trim() ?? 'Unnamed',
-      description: descMatch?.[1]?.trim() ?? '',
-      content,
-      source: 'github',
-      githubUrl: url,
-    }).returning()
+      const nameMatch = frontmatter.match(/^name:\s*["']?(.+?)["']?\s*$/m)
+      const descMatch = frontmatter.match(/^description:\s*["']?(.+?)["']?\s*$/m)
 
-    return c.json(skill, 201)
+      const [skill] = await db.insert(skills).values({
+        name: nameMatch?.[1]?.trim() ?? 'Unnamed',
+        description: descMatch?.[1]?.trim() ?? '',
+        content,
+        source: 'github',
+        githubUrl: url,
+      }).returning()
+
+      return c.json(skill, 201)
+    } catch (err) {
+      console.error('Failed to import skill:', err)
+      return c.json({ error: 'Internal server error' }, 500)
+    }
   }
 )
 
 // Delete skill
 skillsRouter.delete('/:id', async (c) => {
-  await db.delete(skills).where(eq(skills.id, c.req.param('id')))
-  return c.json({ ok: true })
+  try {
+    await db.delete(skills).where(eq(skills.id, c.req.param('id')))
+    return c.json({ ok: true })
+  } catch (err) {
+    console.error('Failed to delete skill:', err)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
 })

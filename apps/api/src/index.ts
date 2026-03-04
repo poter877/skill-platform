@@ -3,6 +3,8 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { env } from './lib/env'
 import { skillsRouter } from './routes/skills'
+import { uploadsRouter } from './routes/uploads'
+import { aiRouter } from './routes/ai'
 
 const app = new Hono()
 
@@ -12,6 +14,8 @@ app.use('*', cors({ origin: env.CORS_ORIGIN }))
 app.get('/health', (c) => c.json({ ok: true }))
 
 app.route('/skills', skillsRouter)
+app.route('/uploads', uploadsRouter)
+app.route('/ai', aiRouter)
 
 export default {
   port: env.PORT,

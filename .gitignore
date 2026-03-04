@@ -4,3 +4,22 @@ dist
 .next
 .env
 .env.local
+
+# Env files
+.env*.local
+.env.production
+.env.development
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test/coverage
+coverage/
+.nyc_output/
+
+# Bun
+bun.lockb

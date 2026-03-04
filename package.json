@@ -1,6 +1,8 @@
 {
   "name": "skill-plant",
   "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": { "node": ">=20", "pnpm": ">=9" },
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -8,7 +10,7 @@
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
-    "turbo": "latest",
+    "turbo": "2.8.13",
     "typescript": "^5"
   }
 }

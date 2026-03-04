@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "skills": {
+    "better-auth": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "computedHash": "dbf750eb5f48f712c2a5c01473ccbb23b5d19c2d4cac932470ae8e333e733e5c"
+    },
+    "bullmq-specialist": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "dfcf7f65fc8bf60081785acb0300a386d120dfe578bf8041d4209c8b9beb2d15"
+    },
+    "docker-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "computedHash": "fe01be30b29e4fe819a7642919a993890ace47969d0d48b109bbd1d64216c09b"
+    },
+    "drizzle-orm": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "9aea7469d696c9b5fa54a84b7a92ea692872fb624fb028f866ab0f3deac84867"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
+    },
+    "frontend-dev-guidelines": {
+      "source": "mrgoonie/claudekit-skills",
+      "sourceType": "github",
+      "computedHash": "581441afedd9b2094314a3876f734fa54351c5c9c0aa65c6c135819c6f311164"
+    },
+    "hono": {
+      "source": "yusukebe/hono-skill",
+      "sourceType": "github",
+      "computedHash": "c7a4ae9efeb7ef47c6473ee4d636fced825a0c26b25372a49417075f6d566af6"
+    },
+    "nextjs-shadcn": {
+      "source": "laguagu/claude-code-nextjs-skills",
+      "sourceType": "github",
+      "computedHash": "100eb5c03d71ec8020f090eca788754e909152e3edbf2a93801739c9d31e6ee5"
+    },
+    "postgresql-table-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "0728424e6f56972333bd60e4f45da0322ac6db273744d863aa2b94f1e95d61ec"
+    },
+    "react-hook-form-zod": {
+      "source": "ovachiever/droid-tings",
+      "sourceType": "github",
+      "computedHash": "1ee0fc6e35b6b6973d6117657e644605a5646bd7e6c2d0c55f52ec073679ac65"
+    },
+    "tanstack-query-best-practices": {
+      "source": "deckardger/tanstack-agent-skills",
+      "sourceType": "github",
+      "computedHash": "21d2e8b7468a81d772b6527ad8ca178cc2f3f08af777bb9061333013ee88a0c9"
+    },
+    "turborepo": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "computedHash": "9c8b558bef91710fc276d47c2e6644a84b8aef1219b2c242f04c6a403ec4a692"
+    },
+    "ui-ux-pro-max": {
+      "source": "kimny1143/claude-code-template",
+      "sourceType": "github",
+      "computedHash": "ba446ed0bc083a9f62e030142be324df63dbd13af66794ad0689114ee41fec50"
+    },
+    "vercel-ai-sdk": {
+      "source": "fluid-tools/claude-skills",
+      "sourceType": "github",
+      "computedHash": "2dfe6c0eb66724e1405fcdeef14598ddbe3745315a6a962e02cc531646fb1c21"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3462ec83f862abb2d532953df33a4dbf87f4616849da5d4b5cc7c13601aaf997"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    }
+  }
+}

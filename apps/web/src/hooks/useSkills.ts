@@ -9,9 +9,10 @@ export function useSkills() {
   })
 }
 
-export function useSkill(id: string) {
+export function useSkill(id: string | undefined) {
   return useQuery({
     queryKey: ['skills', id],
-    queryFn: () => apiGet<Skill>(`/skills/${id}`),
+    queryFn: () => apiGet<Skill>(`/skills/${id!}`),
+    enabled: !!id,
   })
 }

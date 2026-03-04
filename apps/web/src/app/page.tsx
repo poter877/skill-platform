@@ -7,12 +7,12 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 export default function MarketplacePage() {
-  const { data: skills, isLoading } = useSkills()
+  const { data: skills, isLoading, isError } = useSkills()
   const [search, setSearch] = useState('')
 
   const filtered = skills?.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.description.toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(search.toLowerCase().trim()) ||
+    s.description.toLowerCase().includes(search.toLowerCase().trim())
   )
 
   return (
@@ -32,6 +32,10 @@ export default function MarketplacePage() {
       />
 
       {isLoading && <p className="text-muted-foreground">Loading skills...</p>}
+
+      {isError && (
+        <p className="text-destructive">Failed to load skills. Is the API running?</p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered?.map(skill => (

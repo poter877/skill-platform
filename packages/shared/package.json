@@ -6,7 +6,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "bun test"
+    "build": "echo 'shared: no build step (raw .ts exports)'",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^3"

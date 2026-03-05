@@ -40,12 +40,21 @@ skillsRouter.post(
     // Convert GitHub tree/blob URL to raw content URL
     // e.g. https://github.com/anthropics/skills/tree/main/skills/pdf
     //   -> https://raw.githubusercontent.com/anthropics/skills/main/skills/pdf/SKILL.md
-    const rawUrl = url
-      .replace('github.com', 'raw.githubusercontent.com')
-      .replace('/tree/', '/')
-      .replace('/blob/', '/')
-      .replace(/\/SKILL\.md$/, '')  // avoid double SKILL.md if user pasted file link
-      + '/SKILL.md'
+    // Uses URL parsing to avoid issues with .replace() only matching the first occurrence
+    // when repo names or branches contain 'github.com', 'tree', or 'blob'.
+    const parsed = new URL(url)
+    parsed.hostname = 'raw.githubusercontent.com'
+
+    // Path structure: /owner/repo/tree|blob/branch/...path
+    // Remove the 'tree' or 'blob' segment at index 3
+    const pathParts = parsed.pathname.split('/')
+    if (pathParts[3] === 'tree' || pathParts[3] === 'blob') {
+      pathParts.splice(3, 1)
+    }
+
+    let rawPath = pathParts.join('/')
+    rawPath = rawPath.replace(/\/SKILL\.md$/, '')  // avoid double SKILL.md if user pasted file link
+    const rawUrl = `${parsed.origin}${rawPath}/SKILL.md`
 
     try {
       const res = await fetch(rawUrl)

@@ -80,7 +80,8 @@ skillsRouter.post(
 // Delete skill
 skillsRouter.delete('/:id', async (c) => {
   try {
-    await db.delete(skills).where(eq(skills.id, c.req.param('id')))
+    const deleted = await db.delete(skills).where(eq(skills.id, c.req.param('id'))).returning()
+    if (deleted.length === 0) return c.json({ error: 'Not found' }, 404)
     return c.json({ ok: true })
   } catch (err) {
     console.error('Failed to delete skill:', err)

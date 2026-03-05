@@ -8,7 +8,8 @@ const mockSelectFrom = mock(() => ({
 }))
 const mockReturning = mock()
 const mockValues = mock(() => ({ returning: mockReturning }))
-const mockDeleteWhere = mock()
+const mockDeleteReturning = mock()
+const mockDeleteWhere = mock(() => ({ returning: mockDeleteReturning }))
 
 mock.module('../../db', () => ({
   db: {
@@ -127,18 +128,27 @@ describe('POST /skills/import/github', () => {
 describe('DELETE /skills/:id', () => {
   beforeEach(() => {
     mockDeleteWhere.mockClear()
+    mockDeleteReturning.mockClear()
   })
 
   test('returns 200 on successful delete', async () => {
-    mockDeleteWhere.mockResolvedValueOnce(undefined)
+    mockDeleteReturning.mockResolvedValueOnce([TEST_SKILL])
     const res = await skillsRouter.request(`/${TEST_SKILL.id}`, { method: 'DELETE' })
     expect(res.status).toBe(200)
     const body = await res.json() as { ok: boolean }
     expect(body.ok).toBe(true)
   })
 
+  test('returns 404 when skill does not exist', async () => {
+    mockDeleteReturning.mockResolvedValueOnce([])
+    const res = await skillsRouter.request('/nonexistent-id', { method: 'DELETE' })
+    expect(res.status).toBe(404)
+    const body = await res.json() as { error: string }
+    expect(body.error).toBe('Not found')
+  })
+
   test('returns 500 on db error', async () => {
-    mockDeleteWhere.mockRejectedValueOnce(new Error('DB error'))
+    mockDeleteReturning.mockRejectedValueOnce(new Error('DB error'))
     const res = await skillsRouter.request('/some-id', { method: 'DELETE' })
     expect(res.status).toBe(500)
   })

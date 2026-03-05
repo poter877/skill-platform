@@ -98,6 +98,29 @@ describe('POST /skills/import/github', () => {
     globalThis.fetch = originalFetch
   })
 
+  test('correctly handles branch named "blob" in tree URL', async () => {
+    // Regression test for #77: old .replace('/blob/', '/') would incorrectly
+    // strip the branch name when it happens to be 'blob'
+    const skillContent = `---\nname: test\ndescription: A test\n---\nContent`
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = mock((url: string) => {
+      expect(url).toBe(
+        'https://raw.githubusercontent.com/owner/repo/blob/skills/pdf/SKILL.md'
+      )
+      return Promise.resolve(new Response(skillContent, { status: 200 }))
+    }) as typeof fetch
+    mockReturning.mockResolvedValueOnce([TEST_SKILL])
+
+    const res = await skillsRouter.request('/import/github', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: 'https://github.com/owner/repo/tree/blob/skills/pdf' }),
+    })
+
+    expect(res.status).toBe(201)
+    globalThis.fetch = originalFetch
+  })
+
   test('returns 400 on failed GitHub fetch', async () => {
     const originalFetch = globalThis.fetch
     globalThis.fetch = mock(() =>

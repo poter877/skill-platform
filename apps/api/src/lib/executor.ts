@@ -5,7 +5,7 @@ import { jobs, skills } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import { env } from './env'
 
-const JOBS_DIR = process.env.JOBS_DIR ?? join(process.env.HOME ?? '/tmp', '.skill-plant', 'jobs')
+const JOBS_DIR = env.JOBS_DIR
 
 export async function runJob(jobId: string): Promise<string> {
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId))
@@ -54,7 +54,7 @@ async function runDocker(opts: {
     '-v', `${opts.skillsDir}:/root/.claude/skills`,
     '-v', `${opts.workspaceDir}:/workspace`,
     ...envArgs,
-    'skill-plant-claude-code',
+    env.DOCKER_IMAGE,
     opts.prompt,
   ], {
     stdout: 'pipe',

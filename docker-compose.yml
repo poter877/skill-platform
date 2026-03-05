@@ -33,6 +33,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      JOBS_DIR: /tmp/skill-plant-jobs
+      UPLOAD_DIR: /tmp/skill-plant-uploads
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - uploads_data:/tmp/skill-plant-uploads

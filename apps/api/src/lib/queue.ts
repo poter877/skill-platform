@@ -1,11 +1,16 @@
 import { Queue, Worker } from 'bullmq'
+import Redis from 'ioredis'
 import { env } from './env'
 import { runJob } from './executor'
 import { db } from '../db'
 import { jobs } from '../db/schema'
 import { eq } from 'drizzle-orm'
 
-const connection = { url: env.REDIS_URL }
+export function createRedisConnection() {
+  return new Redis(env.REDIS_URL, { maxRetriesPerRequest: null })
+}
+
+const connection = createRedisConnection()
 
 export const jobQueue = new Queue('jobs', { connection })
 
@@ -26,4 +31,4 @@ new Worker('jobs', async (bullJob) => {
       .set({ status: 'failed', errorMessage: String(err), updatedAt: new Date() })
       .where(eq(jobs.id, jobId))
   }
-}, { connection })
+}, { connection: createRedisConnection() })

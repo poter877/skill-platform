@@ -17,6 +17,7 @@
     "bullmq": "^5",
     "drizzle-orm": "^0.39",
     "hono": "^4",
+    "ioredis": "^5.9.3",
     "postgres": "^3",
     "zod": "^3"
   },

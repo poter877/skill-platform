@@ -18,13 +18,18 @@ export function useJobStream(jobId: string | null) {
   const [events, setEvents] = useState<StreamEvent[]>([])
   const [done, setDone] = useState(false)
   const closedRef = useRef(false)
+  const [prevJobId, setPrevJobId] = useState(jobId)
+
+  // Reset state when jobId changes (React-recommended pattern for derived state)
+  if (prevJobId !== jobId) {
+    setPrevJobId(jobId)
+    setEvents([])
+    setDone(false)
+  }
 
   useEffect(() => {
     if (!jobId) return
 
-    // Reset state when jobId changes
-    setEvents([])
-    setDone(false)
     closedRef.current = false
 
     const es = new EventSource(`${API_BASE_URL}/jobs/${jobId}/stream`)

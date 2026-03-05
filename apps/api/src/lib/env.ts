@@ -1,3 +1,5 @@
+import { join } from 'node:path'
+import { homedir } from 'node:os'
 import { z } from 'zod'
 
 export const EnvSchema = z.object({
@@ -14,6 +16,9 @@ export const EnvSchema = z.object({
   R2_BUCKET: z.string().optional(),
   PORT: z.coerce.number().default(3001),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
+  JOBS_DIR: z.string().default(join(homedir(), '.skill-plant', 'jobs')),
+  UPLOAD_DIR: z.string().default('/tmp/skill-plant-uploads'),
+  DOCKER_IMAGE: z.string().default('skill-plant-claude-code'),
 })
 
 const result = EnvSchema.safeParse(process.env)

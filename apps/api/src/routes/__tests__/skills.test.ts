@@ -38,7 +38,7 @@ describe('GET /skills', () => {
   })
 
   test('returns 200 with list of skills', async () => {
-    mockSelectFrom.mockReturnValueOnce([TEST_SKILL])
+    mockSelectFrom.mockReturnValueOnce([TEST_SKILL] as never)
     const res = await skillsRouter.request('/')
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -85,7 +85,7 @@ describe('POST /skills/import/github', () => {
     const originalFetch = globalThis.fetch
     globalThis.fetch = mock(() =>
       Promise.resolve(new Response(skillContent, { status: 200 }))
-    ) as typeof fetch
+    ) as unknown as typeof fetch
     mockReturning.mockResolvedValueOnce([TEST_SKILL])
 
     const res = await skillsRouter.request('/import/github', {
@@ -108,7 +108,7 @@ describe('POST /skills/import/github', () => {
         'https://raw.githubusercontent.com/owner/repo/blob/skills/pdf/SKILL.md'
       )
       return Promise.resolve(new Response(skillContent, { status: 200 }))
-    }) as typeof fetch
+    }) as unknown as typeof fetch
     mockReturning.mockResolvedValueOnce([TEST_SKILL])
 
     const res = await skillsRouter.request('/import/github', {
@@ -125,7 +125,7 @@ describe('POST /skills/import/github', () => {
     const originalFetch = globalThis.fetch
     globalThis.fetch = mock(() =>
       Promise.resolve(new Response('Not Found', { status: 404 }))
-    ) as typeof fetch
+    ) as unknown as typeof fetch
 
     const res = await skillsRouter.request('/import/github', {
       method: 'POST',

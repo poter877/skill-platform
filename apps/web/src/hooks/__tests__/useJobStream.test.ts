@@ -74,7 +74,7 @@ describe('useJobStream', () => {
     })
 
     expect(result.current.events).toHaveLength(1)
-    expect(result.current.events[0]).toEqual({ type: 'status', status: 'running' })
+    expect(result.current.events[0]).toEqual(expect.objectContaining({ type: 'status', status: 'running' }))
     expect(result.current.done).toBe(false)
   })
 
@@ -87,7 +87,7 @@ describe('useJobStream', () => {
     })
 
     expect(result.current.events).toHaveLength(1)
-    expect(result.current.events[0]).toEqual({ type: 'complete', output: 'Result here' })
+    expect(result.current.events[0]).toEqual(expect.objectContaining({ type: 'complete', output: 'Result here' }))
     expect(result.current.done).toBe(true)
     expect(es.closed).toBe(true)
   })
@@ -101,7 +101,7 @@ describe('useJobStream', () => {
     })
 
     expect(result.current.events).toHaveLength(1)
-    expect(result.current.events[0]).toEqual({ type: 'error', error: 'Job failed' })
+    expect(result.current.events[0]).toEqual(expect.objectContaining({ type: 'error', error: 'Job failed' }))
     expect(result.current.done).toBe(true)
     expect(es.closed).toBe(true)
   })
@@ -115,7 +115,7 @@ describe('useJobStream', () => {
     })
 
     expect(result.current.events).toHaveLength(1)
-    expect(result.current.events[0]).toEqual({ type: 'error', error: 'Connection lost' })
+    expect(result.current.events[0]).toEqual(expect.objectContaining({ type: 'error', error: 'Connection lost' }))
     expect(result.current.done).toBe(true)
   })
 
@@ -162,7 +162,7 @@ describe('useJobStream', () => {
     })
 
     expect(result.current.events).toHaveLength(2)
-    expect(result.current.events[0]).toEqual({ type: 'status', status: 'pending' })
-    expect(result.current.events[1]).toEqual({ type: 'status', status: 'running' })
+    expect(result.current.events[0]).toEqual(expect.objectContaining({ type: 'status', status: 'pending', seq: 0 }))
+    expect(result.current.events[1]).toEqual(expect.objectContaining({ type: 'status', status: 'running', seq: 1 }))
   })
 })

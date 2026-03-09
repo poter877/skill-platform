@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { API_BASE_URL } from '@/lib/api'
 
 type StreamEvent =
-  | { type: 'status'; status: string }
-  | { type: 'complete'; output: string }
-  | { type: 'error'; error: string }
+  | { type: 'status'; status: string; seq: number }
+  | { type: 'complete'; output: string; seq: number }
+  | { type: 'error'; error: string; seq: number }
 
 function safeParse(data: string): Record<string, unknown> {
   try {
@@ -18,13 +18,19 @@ export function useJobStream(jobId: string | null) {
   const [events, setEvents] = useState<StreamEvent[]>([])
   const [done, setDone] = useState(false)
   const closedRef = useRef(false)
+  const seqRef = useRef(0)
+  const [prevJobId, setPrevJobId] = useState(jobId)
+
+  // Reset state when jobId changes (React-recommended pattern for derived state)
+  if (prevJobId !== jobId) {
+    setPrevJobId(jobId)
+    setEvents([])
+    setDone(false)
+  }
 
   useEffect(() => {
     if (!jobId) return
 
-    // Reset state when jobId changes
-    setEvents([])
-    setDone(false)
     closedRef.current = false
 
     const es = new EventSource(`${API_BASE_URL}/jobs/${jobId}/stream`)
@@ -33,7 +39,7 @@ export function useJobStream(jobId: string | null) {
     es.onerror = () => {
       if (closedRef.current) return
       closedRef.current = true
-      setEvents(prev => [...prev, { type: 'error', error: 'Connection lost' }])
+      setEvents(prev => [...prev, { type: 'error', error: 'Connection lost', seq: seqRef.current++ }])
       setDone(true)
       es.close()
     }
@@ -42,7 +48,7 @@ export function useJobStream(jobId: string | null) {
     es.addEventListener('status', (e) => {
       if (closedRef.current) return
       const data = safeParse((e as MessageEvent).data)
-      setEvents(prev => [...prev, { type: 'status', status: String(data.status ?? '') }])
+      setEvents(prev => [...prev, { type: 'status', status: String(data.status ?? ''), seq: seqRef.current++ }])
     })
 
     // Application-level complete event
@@ -50,7 +56,7 @@ export function useJobStream(jobId: string | null) {
       if (closedRef.current) return
       closedRef.current = true
       const data = safeParse((e as MessageEvent).data)
-      setEvents(prev => [...prev, { type: 'complete', output: String(data.output ?? '') }])
+      setEvents(prev => [...prev, { type: 'complete', output: String(data.output ?? ''), seq: seqRef.current++ }])
       setDone(true)
       es.close()
     })
@@ -60,7 +66,7 @@ export function useJobStream(jobId: string | null) {
       if (closedRef.current) return
       closedRef.current = true
       const data = safeParse((e as MessageEvent).data)
-      setEvents(prev => [...prev, { type: 'error', error: String(data.error ?? 'Unknown error') }])
+      setEvents(prev => [...prev, { type: 'error', error: String(data.error ?? 'Unknown error'), seq: seqRef.current++ }])
       setDone(true)
       es.close()
     })

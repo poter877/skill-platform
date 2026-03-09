@@ -94,6 +94,8 @@ Browser → Next.js (:3000) → Hono API (:3001) → PostgreSQL (Drizzle ORM)
 - **`useJobStream`** hook wraps native `EventSource` for SSE
 - File uploads go through `POST /uploads` first, then the returned server path is passed as job input
 - Path alias: `@/*` → `./src/*`
+- **Server/Client page split**: pages that need `export const dynamic` or other route segment config must be Server Components. Pattern: `page.tsx` (Server Component, holds config + re-exports) + `*Client.tsx` (`'use client'`, holds hooks and interactive logic). Example: `app/page.tsx` → `app/MarketplaceClient.tsx`
+- **Suspense + ErrorBoundary**: data-fetching components use `useSuspenseQuery` / `useSuspenseQueries`; outer page wraps them in `<ErrorBoundary>` + `<Suspense>`. Use `useSuspenseQueries` (parallel) instead of two sequential `useSuspenseQuery` calls to avoid waterfall.
 
 ### AI Multi-Model Support
 

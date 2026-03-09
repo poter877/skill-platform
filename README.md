@@ -1,5 +1,7 @@
 # Skill Platform
 
+[![CI](https://github.com/poter877/skill-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/poter877/skill-platform/actions/workflows/ci.yml)
+
 让每个人都能使用 AI Skill 的开放平台。
 
 ## 背景

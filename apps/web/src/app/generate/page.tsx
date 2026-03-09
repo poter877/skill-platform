@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { apiPost, API_BASE_URL } from '@/lib/api'
 import { GenerateSkillSchema } from '@skill-plant/shared'
 import { useRouter } from 'next/navigation'
-import type { Skill } from '@skill-plant/shared'
+import type { Skill, GenerateSkill } from '@skill-plant/shared'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function GeneratePage() {
   const [generatedContent, setGeneratedContent] = useState('')
@@ -23,7 +24,6 @@ export default function GeneratePage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Fix 2: AbortController ref for cancellation
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -35,8 +35,7 @@ export default function GeneratePage() {
     defaultValues: { description: '', model: 'gpt-5' as const },
   })
 
-  async function handleGenerate(values: { description: string; model: string }) {
-    // Fix 2: Abort any in-flight request and create a new controller
+  async function handleGenerate(values: GenerateSkill) {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -50,7 +49,7 @@ export default function GeneratePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
-        signal: controller.signal,  // Fix 2: pass signal
+        signal: controller.signal,
       })
 
       if (!res.ok || !res.body) {
@@ -68,7 +67,6 @@ export default function GeneratePage() {
         setGeneratedContent(prev => prev + text)
       }
     } catch (err) {
-      // Fix 2: Ignore AbortError (user-initiated cancellation)
       if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Generation failed')
     } finally {
@@ -91,7 +89,7 @@ export default function GeneratePage() {
 
   return (
     <main className="container mx-auto py-8 px-4 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">✨ Generate Skill with AI</h1>
+      <PageHeader title="✨ 生成 Skill" backHref="/" backLabel="返回市场" />
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -110,7 +108,6 @@ export default function GeneratePage() {
                         {...field}
                       />
                     </FormControl>
-                    {/* Fix 3: Show validation messages for description field */}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -132,13 +129,11 @@ export default function GeneratePage() {
                         <SelectItem value="gemini-2.0-flash">Gemini Flash</SelectItem>
                       </SelectContent>
                     </Select>
-                    {/* Fix 3: Show validation messages for model field */}
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Fix 4: Disable Generate button while saving */}
               <Button type="submit" disabled={isGenerating || isSaving}>
                 {isGenerating ? 'Generating...' : '✨ Generate'}
               </Button>

@@ -1,19 +1,31 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useParams } from 'next/navigation'
-import { useSkill } from '@/hooks/useSkills'
-import { useSkillInputSchema } from '@/hooks/useSkillInputSchema'
+import { useSuspenseQueries } from '@tanstack/react-query'
 import { useJobStream } from '@/hooks/useJobStream'
 import { DynamicForm } from '@/components/DynamicForm'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { apiPost } from '@/lib/api'
-import type { Job } from '@skill-plant/shared'
+import { apiGet, apiPost } from '@/lib/api'
+import type { Skill, InputSchemaResponseType, Job } from '@skill-plant/shared'
+import { PageHeader } from '@/components/PageHeader'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-export default function RunSkillPage() {
-  const { id } = useParams<{ id: string }>()
-  const { data: skill, isLoading: skillLoading } = useSkill(id)
-  const { data: schema, isLoading: schemaLoading } = useSkillInputSchema(id)
+function RunSkillContent({ id }: { id: string }) {
+  const [{ data: skill }, { data: schema }] = useSuspenseQueries({
+    queries: [
+      {
+        queryKey: ['skills', id],
+        queryFn: () => apiGet<Skill>(`/skills/${id}`),
+      },
+      {
+        queryKey: ['skills', id, 'schema'],
+        queryFn: () => apiPost<InputSchemaResponseType>(`/ai/analyze/${id}`, {}),
+        staleTime: Infinity,
+      },
+    ],
+  })
+
   const [jobId, setJobId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -32,17 +44,9 @@ export default function RunSkillPage() {
     }
   }
 
-  if (skillLoading || schemaLoading) {
-    return <div className="container mx-auto py-8 px-4">Loading...</div>
-  }
-
-  if (!skill || !schema) {
-    return <div className="container mx-auto py-8 px-4">Skill not found</div>
-  }
-
   return (
     <main className="container mx-auto py-8 px-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-2">{skill.name}</h1>
+      <PageHeader title={skill.name} backHref="/" backLabel="返回市场" />
       <p className="text-muted-foreground mb-6">{skill.description}</p>
 
       {!jobId && (
@@ -66,15 +70,17 @@ export default function RunSkillPage() {
             <CardTitle className="flex items-center gap-2">
               Output
               {!done && <Badge variant="secondary">Running...</Badge>}
-              {done && events.some(e => e.type === 'error')
-                ? <Badge variant="destructive">Failed</Badge>
-                : done && <Badge variant="default">Done</Badge>}
+              {done && (
+                events.some(e => e.type === 'error')
+                  ? <Badge variant="destructive">Failed</Badge>
+                  : <Badge variant="default">Done</Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {events.map((event, i) => (
-                <div key={i}>
+              {events.map((event) => (
+                <div key={event.seq}>
                   {event.type === 'status' && (
                     <p className="text-sm text-muted-foreground">→ {event.status}</p>
                   )}
@@ -93,5 +99,20 @@ export default function RunSkillPage() {
         </Card>
       )}
     </main>
+  )
+}
+
+export default function RunSkillPage() {
+  const { id } = useParams<{ id: string }>()
+  return (
+    <ErrorBoundary fallback={
+      <div className="container mx-auto py-8 px-4">Skill not found</div>
+    }>
+      <Suspense fallback={
+        <div className="container mx-auto py-8 px-4">Loading...</div>
+      }>
+        <RunSkillContent id={id} />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
